@@ -6,7 +6,7 @@ class Configuration:
 
     TOR_DEFAULT_PORT = 9050
     CHUNK_SIZE = 1024
-    THREAD_POOL_SIZE = 4
+    THREAD_POOL_SIZE = 2
 
     def __init__(self, config_path):
         try:

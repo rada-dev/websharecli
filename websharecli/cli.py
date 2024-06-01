@@ -10,7 +10,8 @@ from websharecli import commands
 from websharecli.terminal import T
 from websharecli.util import ident_from_url, filename_from_url, remove_duplicates, makedir
 from websharecli.downloader import download_url, download_urls
-from websharecli.scraper import scrape_all_pages_download_links
+from websharecli.scraper import scrape_all_pages_download_links, get_download_link
+from websharecli.exceptions import WebshareCliException
 
 
 def link_search(args):
@@ -86,8 +87,46 @@ def link_scrape(args):
                 download_urls(download_links, dest_dir, True, args.tor_ports, args.pool)
             else:
                 download_urls(download_links, dest_dir, True, args.tor_ports, config.CONFIG.pool_size)
-        else:
+        elif args.tor:
             download_urls(download_links, dest_dir, args.tor, [config.CONFIG.tor_port], config.CONFIG.pool_size)
+        else:
+            if args.pool:
+                download_urls(download_links, dest_dir, args.tor, [config.CONFIG.tor_port], args.pool)
+            else:
+                download_urls(download_links, dest_dir, args.tor, [config.CONFIG.tor_port], config.CONFIG.pool_size)
+
+    else:
+        print("\n".join(download_links))
+
+
+def link_file(args):
+    download_links = []
+    for p in args.path:
+        urls = open(p, "r").read().strip().split("\n")
+        urls = filter(bool, urls)   # non empty links
+        for url in urls:
+            try:
+                link = get_download_link(url, args.ignore_vip)
+                download_links.append(link)
+            except WebshareCliException:
+                continue
+    download_links = remove_duplicates(download_links)
+    if args.download:
+        dest_dir = args.dest_dir if args.dest_dir and args.dest_dir.strip() else ""
+        makedir(dest_dir)
+        if args.tor_ports:
+            if args.pool:
+                download_urls(download_links, dest_dir, True, args.tor_ports, args.pool)
+            else:
+                download_urls(download_links, dest_dir, True, args.tor_ports, config.CONFIG.pool_size)
+        elif args.tor:
+            download_urls(download_links, dest_dir, args.tor, [config.CONFIG.tor_port], config.CONFIG.pool_size)
+        else:
+            if args.pool:
+                download_urls(download_links, dest_dir, args.tor, [config.CONFIG.tor_port], args.pool)
+            else:
+                download_urls(download_links, dest_dir, args.tor, [config.CONFIG.tor_port], config.CONFIG.pool_size)
+
     else:
         print("\n".join(download_links))
 
@@ -193,6 +232,26 @@ def main():
         'what', type=str, nargs='+',
         help='string identifying the files')
 
+    link_file_parser = subparsers.add_parser('link-file', help='search for files and scrape download links')
+    link_file_parser.add_argument(
+        '--ignore-vip', action='store_true',
+        help='override force_vip configuration and temporarily allow non-vip links')
+    link_file_parser.add_argument(
+        '--download', action='store_true', help='download the searched link')
+    link_file_parser.add_argument(
+        '--tor', action='store_true', help='download through tor')
+    link_file_parser.add_argument(
+        '--tor-ports', nargs='+', type=int, help='download through specific tor port')
+    link_file_parser.add_argument(
+        '--dest-dir', type=str, help='destination directory to save downloaded files to')
+    link_file_parser.add_argument(
+        '--pool', type=int, help='the size of the threading pool, how many files download at the same time')
+    link_file_parser.add_argument(
+        '--skip-same', action='store_true', help='skip downloading files with identical filename')
+    link_file_parser.add_argument(
+        'path', type=str, nargs='+',
+        help='string identifying the files')
+
     subparsers.add_parser(
         'sample-config', help='create sample config file')
 
@@ -207,6 +266,7 @@ def main():
         'link-id': get_link_by_id,
         'link-url': get_link_by_url,
         'link-scrape': link_scrape,
+        'link-file': link_file,
         'sample-config': sample_config,
     }
     try:

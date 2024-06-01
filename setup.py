@@ -14,11 +14,8 @@ def get_install_requires() -> list:
 
 setup(
     name="websharecli",
-    version="2.2.3",
+    version="2.2.4",
     description="webshare.cz CLI downloader",
-    author="Tomas Krizek",
-    author_email="tomas.krizek@mailbox.org",
-    url="https://github.com/tomaskrizek/websharecli",
     license="GPLv3",
     packages=['websharecli'],
     package_data={'websharecli': ['static/*']},

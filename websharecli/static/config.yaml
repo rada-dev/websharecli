@@ -45,4 +45,4 @@ tor_port: 9050
 
 # chunk size 1kB for the downloader, 4 concurrent downloads by default
 chunk_size: 1024
-pool_size: 4
+pool_size: 2
