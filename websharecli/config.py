@@ -28,7 +28,6 @@ class Configuration:
         self.pool_size = data['pool_size'] if 'pool_size' in data else self.THREAD_POOL_SIZE
 
 
-CONFIG_FILE_TEMPLATE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), 'static', 'config.yaml')
+CONFIG_FILE_TEMPLATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'config.yaml')
 CONFIG_FILE = os.path.expanduser("~/.config/webshare/config.yaml")
 CONFIG = Configuration(CONFIG_FILE)
