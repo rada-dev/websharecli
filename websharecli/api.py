@@ -16,7 +16,7 @@ def query(url, data):
     req = requests.post(url, data=data)
     resp = xmltodict.parse(req.text)['response']
     if resp['status'] != 'OK':
-        raise Exception(f"api error: returned status: {resp['status']}")
+        raise LinkUnavailableException(f"api error: returned status: {resp['status']}")
     return resp
 
 
@@ -40,10 +40,7 @@ def search(what, sort='largest', limit=5):
 
 def file_link_by_id(ident, ignore_vip=False):
     data = {'ident': ident, 'wst': CONFIG.wst}
-    try:
-        resp = query(ENDPOINTS['file_link'], data)
-    except Exception as exc:
-        raise LinkUnavailableException(exc) from exc
+    resp = query(ENDPOINTS['file_link'], data)
     if not ignore_vip and CONFIG.force_vip and '//vip.' not in resp['link']:
         raise NotVipLinkException
     return resp['link']

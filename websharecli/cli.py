@@ -11,7 +11,7 @@ from websharecli.terminal import T
 from websharecli.util import ident_from_url, filename_from_url, remove_duplicates, makedir
 from websharecli.downloader import download_url, download_urls
 from websharecli.scraper import scrape_all_pages_download_links, get_download_link
-from websharecli.exceptions import WebshareCliException
+from websharecli.exceptions import WebshareCliException, LinkUnavailableException
 
 
 def link_search(args):
@@ -101,6 +101,7 @@ def link_scrape(args):
 
 def link_file(args):
     download_links = []
+    unavailable_links = []
     for p in args.path:
         urls = open(p, "r").read().strip().split("\n")
         urls = filter(bool, urls)   # non empty links
@@ -108,10 +109,14 @@ def link_file(args):
             try:
                 link = get_download_link(url, args.ignore_vip)
                 download_links.append(link)
-            except WebshareCliException:
-                continue
+            except LinkUnavailableException:
+                # print(f"Download link unavailable {url}")
+                unavailable_links.append(url)
     download_links = remove_duplicates(download_links)
     if args.download:
+        # print only when downloading, otherwise do not interfere with stdout of valid links
+        for idx, link in enumerate(unavailable_links):
+            print(f"{T.red}{idx+1}/{len(unavailable_links)} LINK UNAVAILABLE{T.normal} {link}")
         dest_dir = args.dest_dir if args.dest_dir and args.dest_dir.strip() else ""
         makedir(dest_dir)
         if args.tor_ports:
